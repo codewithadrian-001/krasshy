@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A Message For You</title>
+    <style>
+        /* --- CSS STYLES --- */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: #ff9dff; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden; 
+        }
+
+        .container {
+            position: relative;
+            margin-top: 100px; 
+        }
+
+        /* Envelope Container */
+        .envelope {
+            position: relative;
+            width: 320px;
+            height: 220px;
+            background-color: #d32f2f; 
+            border-radius: 0 0 10px 10px;
+            cursor: pointer;
+            box-shadow: 0 15px 25px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease;
+        }
+
+        .envelope:hover {
+            transform: translateY(-5px);
+        }
+
+        /* Envelope Front */
+        .envelope-front {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            border-left: 160px solid #f44336;
+            border-right: 160px solid #f44336;
+            border-bottom: 110px solid #e53935;
+            border-top: 110px solid transparent;
+            z-index: 3;
+            border-radius: 0 0 10px 10px;
+            pointer-events: none;
+        }
+
+        /* Envelope Flap */
+        .flap {
+            position: absolute;
+            top: 0;
+            left: 0;
+            border-left: 160px solid transparent;
+            border-right: 160px solid transparent;
+            border-top: 130px solid #ff5757;
+            z-index: 4;
+            transform-origin: top;
+            transition: transform 0.6s ease;
+            pointer-events: none;
+        }
+
+        /* 'OPEN' Text */
+        .open-text {
+            position: absolute;
+            top: 60%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-weight: bold;
+            font-size: 1rem;
+            letter-spacing: 2px;
+            z-index: 5;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+        }
+
+        /* The Letter Inside */
+        .letter {
+            position: absolute;
+            top: 10px; 
+            left: 10px;
+            right: 10px;
+            background-color: #fffaf0; 
+            border-radius: 5px;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 15px 20px 15px;
+            
+            /* DYNAMIC HEIGHT FIX */
+            max-height: 180px; 
+            overflow: hidden; 
+            transition: transform 0.8s ease 0.3s, max-height 0.8s ease 0.3s;
+        }
+
+        /* Character Styling */
+        .character {
+            font-size: 3.5rem;
+            opacity: 0;
+            transform: scale(0.5);
+            transition: all 0.5s ease 0.8s;
+            margin-bottom: 5px;
+        }
+
+        /* Speech Bubble */
+        .speech-bubble {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 15px;
+            width: 100%;
+            min-height: 60px; 
+            height: auto; 
+            text-align: left;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            color: #333;
+            position: relative;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.5s ease 1.1s, transform 0.5s ease 1.1s; 
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .speech-bubble::before {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            border-bottom: 10px solid #e3f2fd;
+        }
+
+        /* The blinking cursor */
+        .cursor {
+            display: inline-block;
+            width: 8px;
+            height: 15px;
+            background-color: #333;
+            animation: blink 0.7s infinite;
+            vertical-align: middle;
+            margin-left: 2px;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        /* Styled Button */
+        .action-button {
+            display: block;
+            margin-top: 15px;
+            padding: 8px 16px;
+            background-color: #ff5757;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+            transition: background-color 0.2s, transform 0.1s;
+        }
+
+        .action-button:hover {
+            background-color: #e53935;
+        }
+
+        .action-button:active {
+            transform: scale(0.95);
+        }
+
+        /* --- ANIMATION STATES --- */
+        .envelope.open .flap {
+            transform: rotateX(180deg);
+            z-index: 1; 
+        }
+
+        .envelope.open .open-text {
+            opacity: 0; 
+        }
+
+        .envelope.open .letter {
+            max-height: 800px; 
+            transform: translateY(-200px); 
+            z-index: 5; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .envelope.open .character {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .envelope.open .speech-bubble {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* --- PETAL CSS --- */
+        .petal {
+            position: fixed;
+            top: -10vh;
+            background-color: #ab7ef3;
+            border-radius: 15px 0px 15px 0px; /* Gives it a leaf/petal shape */
+            pointer-events: none; /* Allows clicking through them */
+            z-index: 10;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.15); /* Needed so they show up against the matching background */
+            animation: fall linear forwards;
+        }
+
+        @keyframes fall {
+            0% {
+                transform: translateY(0) rotate(0deg) translateX(0);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(110vh) rotate(720deg) translateX(50px);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <audio id="typing-sound" src="typing.mp3" preload="auto"></audio>
+
+    <div class="container">
+        <div class="envelope" id="envelope">
+            <div class="flap"></div>
+            <div class="envelope-front"></div>
+            <div class="open-text" id="open-text">TAP TO OPEN</div>
+            
+            <div class="letter">
+                <div class="character">👦</div> 
+                <div class="speech-bubble">
+                    <span id="typed-text"></span><span class="cursor" id="cursor"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const envelope = document.getElementById("envelope");
+            const textElement = document.getElementById("typed-text");
+            const cursorElement = document.getElementById("cursor");
+            const speechBubble = document.querySelector(".speech-bubble");
+            
+            // Get the audio element
+            const typingSound = document.getElementById("typing-sound");
+            // Lower the volume so it isn't too aggressive
+            typingSound.volume = 0.3; 
+            
+            // Removed the button from the string so it doesn't get typed out character by character
+            const message = `Hi, I'm Adrian! Nice to meet you 👋. \n\nI made this little website just to introduce myself properly. I'm usually a lot better at typing out code than I am at expressing my feelings. I have something for you, please click the button below!`;
+            
+            let i = 0;
+            let isTypingStarted = false;
+
+            // Petal Raining Function
+            function startRainingPetals() {
+                setInterval(() => {
+                    const petal = document.createElement('div');
+                    petal.classList.add('petal');
+                    
+                    // Randomize size, starting position, and fall speed
+                    const size = Math.random() * 12 + 8; // Between 8px and 20px
+                    petal.style.width = `${size}px`;
+                    petal.style.height = `${size}px`;
+                    petal.style.left = `${Math.random() * 100}vw`;
+                    petal.style.animationDuration = `${Math.random() * 3 + 3}s`; // Between 3s and 6s
+                    
+                    document.body.appendChild(petal);
+                    
+                    // Remove petal from DOM after it falls
+                    setTimeout(() => {
+                        petal.remove();
+                    }, 6000);
+                }, 150); // Spawn a new petal every 150 milliseconds
+            }
+
+            function typeWriter() {
+                if (i < message.length) {
+                    let char = message.charAt(i);
+                    let delay = 65; 
+
+                    if (char === '\n') {
+                        textElement.innerHTML += "<br>";
+                        delay = 800; 
+                    } else {
+                        textElement.innerHTML += char;
+                        
+                        if (char === '.' || char === '!' || char === '?') {
+                            delay = 900; 
+                        } 
+                        else if (char === ',') {
+                            delay = 400; 
+                        }
+
+                        // Play sound on characters (skip spaces and emojis for a more natural feel)
+                        if (char !== ' ' && !['👋'].includes(char)) {
+                            typingSound.currentTime = 0; // Reset sound to beginning
+                            // The catch block prevents the browser from throwing an error if audio is blocked
+                            typingSound.play().catch(error => console.log("Audio prevented:", error)); 
+                        }
+                    }
+                    
+                    i++;
+                    setTimeout(typeWriter, delay);
+                } else {
+                    // WHEN TYPING FINISHES:
+                    cursorElement.style.display = 'none'; // Hide the cursor
+                    
+                    // Inject the fully formed button into the speech bubble
+                    const buttonHtml = `<button class="action-button" onclick="window.location.href='blooming-flowers.html'">Click me please!</button>`;
+                    speechBubble.innerHTML += buttonHtml;
+                }
+            }
+
+            envelope.addEventListener("click", () => {
+                if (!envelope.classList.contains("open")) {
+                    envelope.classList.add("open");
+                    
+                    if (!isTypingStarted) {
+                        isTypingStarted = true;
+                        startRainingPetals(); // Trigger the petals immediately when opened
+                        setTimeout(typeWriter, 1600);
+                    }
+                }
+            });
+        });
+    </script>
+
+</body>
+</html>
